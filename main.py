@@ -5,31 +5,51 @@ from dotenv import load_dotenv
 
 
 def main():
+    """
+    The main function is the entry point of the program.
+    It loads environment variables from a .env file, sets up Streamlit's page title and header,
+    and then prompts the user to upload a CSV file. If they do so, it asks them what type of query they want to run:
+    - Analyze: A simple question about one or more columns in their data (e.g., &quot;What is my average revenue?&quot;)
+    - Visualize: A visualization request (e.g., &quot;Show me a bar chart of my revenue by month&quot;)
+    - Predict: A prediction request (e.g., &quot;Predict
+
+    :return: A string
+    :doc-author: Trelent
+    """
     load_dotenv()
+
     st.set_page_config(page_title="📊 Analyze your business")
     st.header("📊 Analyze your business")
-
-    # page_bg_img = '''
-    #     <style>
-    #     body {
-    #     background-image: url("https://unsplash.com/photos/business-visual-data-analyzing-technology-by-creative-computer-software-ZJKfQ8Ber7E");
-    #     background-size: cover;
-    #     }
-    #     </style>
-    #     '''
-
-    # st.markdown(page_bg_img, unsafe_allow_html=True)
 
     user_csv = st.file_uploader("Upload CSV file", type="csv")
 
     if user_csv is not None:
+        question_type = st.selectbox(
+            "Select Your Query Type",
+            ("Analyze", "Visualize", "Predict", "Simple Query"),
+            index=None,
+            placeholder="Click to select an option",
+        )
+
+        user_question = None
         agent = create_csv_agent(OpenAI(temperature=0), user_csv, verbose=True)
+        if question_type == "Simple Query":
+            user_question = st.text_input("Ask your query")
+            # agent = create_csv_agent(OpenAI(temperature=0), user_csv, verbose=True)
 
-        user_question = st.text_input("Ask a question")
+            if user_question is not None and user_question != "":
+                response = agent.run(user_question)
+                st.write(response)
+        if question_type == "Analyze":
 
-        if user_question is not None and user_question != "":
+            user_question = "Write a concise yet clear analysis of the provided data in a professional tone."
             response = agent.run(user_question)
             st.write(response)
+        #     user_question = st.text_input("Ask your query")
+        # if question_type == "Visualize":
+        #     user_question = st.text_input("Ask your query")
+        # if question_type == "Predict":
+        #     user_question = st.text_input("Ask your query")
 
 
 if __name__ == "__main__":
